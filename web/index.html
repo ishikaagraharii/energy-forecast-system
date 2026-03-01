@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Energy Forecasting & Market Dashboard</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="container">
+        <div class="header-content">
+          <div class="logo">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+              <path d="M16 2L4 12h4v14h6v-8h4v8h6V12h4L16 2z" fill="#4F46E5" />
+              <circle cx="16" cy="20" r="2" fill="#FCD34D" />
+            </svg>
+            <h1>Energy Market Intelligence</h1>
+          </div>
+          <div class="header-actions">
+            <button id="runForecastBtn" class="btn btn-primary">
+              <span class="btn-icon">⚡</span>
+              Run Forecast
+            </button>
+            <div class="status-indicator" id="statusIndicator">
+              <span class="status-dot"></span>
+              <span class="status-text">Ready</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="container">
+        <!-- Summary Cards -->
+        <section class="summary-section" id="summarySection">
+          <div class="card summary-card">
+            <div
+              class="card-icon"
+              style="
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              "
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                stroke-width="2"
+              >
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+              </svg>
+            </div>
+            <div class="card-content">
+              <div class="card-label">Peak Load</div>
+              <div class="card-value" id="peakLoad">--</div>
+              <div class="card-sublabel">MW</div>
+            </div>
+          </div>
+
+          <div class="card summary-card">
+            <div
+              class="card-icon"
+              style="
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+              "
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="5" />
+                <path
+                  d="M12 1v6m0 6v6m5.66-13.66l-4.24 4.24m0 6l-4.24 4.24M23 12h-6m-6 0H1m18.66 5.66l-4.24-4.24m0-6l-4.24-4.24"
+                />
+              </svg>
+            </div>
+            <div class="card-content">
+              <div class="card-label">Renewable Share</div>
+              <div class="card-value" id="renewableShare">--</div>
+              <div class="card-sublabel">%</div>
+            </div>
+          </div>
+
+          <div class="card summary-card">
+            <div
+              class="card-icon"
+              style="
+                background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+              "
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                stroke-width="2"
+              >
+                <path
+                  d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+                />
+              </svg>
+            </div>
+            <div class="card-content">
+              <div class="card-label">Avg Price</div>
+              <div class="card-value" id="avgPrice">--</div>
+              <div class="card-sublabel">₹/MWh</div>
+            </div>
+          </div>
+
+          <div class="card summary-card">
+            <div
+              class="card-icon"
+              style="
+                background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+              "
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                stroke-width="2"
+              >
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+              </svg>
+            </div>
+            <div class="card-content">
+              <div class="card-label">Expected Profit</div>
+              <div class="card-value" id="expectedProfit">--</div>
+              <div class="card-sublabel">₹</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Navigation Tabs -->
+        <nav class="tabs">
+          <button class="tab active" data-tab="overview">Overview</button>
+          <button class="tab" data-tab="forecasts">Forecasts</button>
+          <button class="tab" data-tab="market">Market Intelligence</button>
+          <button class="tab" data-tab="bidding">Bidding Strategy</button>
+          <button class="tab" data-tab="performance">Performance</button>
+        </nav>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+          <!-- Overview Tab -->
+          <div class="tab-pane active" id="overview">
+            <div class="grid-2">
+              <div class="card chart-card">
+                <div class="card-header">
+                  <h3>24-Hour Load Forecast</h3>
+                </div>
+                <div class="card-body">
+                  <canvas id="loadChart"></canvas>
+                </div>
+              </div>
+
+              <div class="card chart-card">
+                <div class="card-header">
+                  <h3>Renewable Generation</h3>
+                </div>
+                <div class="card-body">
+                  <canvas id="renewableChart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <div class="card chart-card">
+              <div class="card-header">
+                <h3>Price Forecast & Net Demand</h3>
+              </div>
+              <div class="card-body">
+                <canvas id="priceChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Forecasts Tab -->
+          <div class="tab-pane" id="forecasts">
+            <div class="grid-2">
+              <div class="card chart-card">
+                <div class="card-header">
+                  <h3>Temperature Forecast</h3>
+                </div>
+                <div class="card-body">
+                  <canvas id="tempChart"></canvas>
+                </div>
+              </div>
+
+              <div class="card chart-card">
+                <div class="card-header">
+                  <h3>Solar Radiation</h3>
+                </div>
+                <div class="card-body">
+                  <canvas id="solarRadChart"></canvas>
+                </div>
+              </div>
+
+              <div class="card chart-card">
+                <div class="card-header">
+                  <h3>Wind Speed</h3>
+                </div>
+                <div class="card-body">
+                  <canvas id="windChart"></canvas>
+                </div>
+              </div>
+
+              <div class="card chart-card">
+                <div class="card-header">
+                  <h3>Humidity & Cloud Cover</h3>
+                </div>
+                <div class="card-body">
+                  <canvas id="humidityChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Market Intelligence Tab -->
+          <div class="tab-pane" id="market">
+            <div class="card chart-card">
+              <div class="card-header">
+                <h3>Market Clearing Price Forecast</h3>
+              </div>
+              <div class="card-body">
+                <canvas id="mcpChart"></canvas>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="card">
+                <div class="card-header">
+                  <h3>Price Statistics</h3>
+                </div>
+                <div class="card-body">
+                  <div class="stats-grid" id="priceStats">
+                    <div class="stat-item">
+                      <div class="stat-label">Peak Price</div>
+                      <div class="stat-value">--</div>
+                    </div>
+                    <div class="stat-item">
+                      <div class="stat-label">Min Price</div>
+                      <div class="stat-value">--</div>
+                    </div>
+                    <div class="stat-item">
+                      <div class="stat-label">Average</div>
+                      <div class="stat-value">--</div>
+                    </div>
+                    <div class="stat-item">
+                      <div class="stat-label">Volatility</div>
+                      <div class="stat-value">--</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-header">
+                  <h3>Net Demand Analysis</h3>
+                </div>
+                <div class="card-body">
+                  <div class="stats-grid" id="netDemandStats">
+                    <div class="stat-item">
+                      <div class="stat-label">Peak Net Demand</div>
+                      <div class="stat-value">--</div>
+                    </div>
+                    <div class="stat-item">
+                      <div class="stat-label">Min Net Demand</div>
+                      <div class="stat-value">--</div>
+                    </div>
+                    <div class="stat-item">
+                      <div class="stat-label">Average</div>
+                      <div class="stat-value">--</div>
+                    </div>
+                    <div class="stat-item">
+                      <div class="stat-label">RE Penetration</div>
+                      <div class="stat-value">--</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bidding Strategy Tab -->
+          <div class="tab-pane" id="bidding">
+            <div class="card">
+              <div class="card-header">
+                <h3>Bidding Configuration</h3>
+              </div>
+              <div class="card-body">
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>Capacity (MW)</label>
+                    <input
+                      type="number"
+                      id="capacityInput"
+                      value="500"
+                      min="1"
+                      max="10000"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label>Strategy</label>
+                    <select id="strategySelect">
+                      <option value="conservative">Conservative</option>
+                      <option value="moderate">Moderate</option>
+                      <option value="optimal" selected>Optimal</option>
+                      <option value="aggressive">Aggressive</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <button id="optimizeBidBtn" class="btn btn-primary">
+                      Optimize Bids
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card chart-card">
+              <div class="card-header">
+                <h3>Bid Schedule (24 Hours)</h3>
+              </div>
+              <div class="card-body">
+                <canvas id="bidChart"></canvas>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3>Bid Schedule Details</h3>
+              </div>
+              <div class="card-body">
+                <div class="table-container">
+                  <table id="bidTable" class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Hour</th>
+                        <th>Forecast Price</th>
+                        <th>Bid Price</th>
+                        <th>Volume (MW)</th>
+                        <th>Expected Revenue</th>
+                        <th>Acceptance Prob</th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Performance Tab -->
+          <div class="tab-pane" id="performance">
+            <div class="card chart-card">
+              <div class="card-header">
+                <h3>Strategy Comparison</h3>
+              </div>
+              <div class="card-body">
+                <canvas id="strategyChart"></canvas>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3>Performance Metrics</h3>
+              </div>
+              <div class="card-body">
+                <div id="performanceMetrics" class="metrics-container">
+                  <p class="text-muted">
+                    Run simulation to see performance metrics
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Running forecast pipeline...</div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
