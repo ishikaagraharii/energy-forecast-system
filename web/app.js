@@ -1,6 +1,7 @@
 // Energy Forecasting Dashboard - Main Application
 
-const API_BASE = window.location.origin;
+//const API_BASE = window.location.origin;
+const API_BASE = `${window.location.origin}/api`;
 
 // Global state
 let forecastData = null;
